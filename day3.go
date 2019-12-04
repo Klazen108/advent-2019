@@ -9,7 +9,11 @@ import (
 
 func Challenge3_1(wireListing string) string {
 	intersectionSet := make(map[Point]bool)
-	wires := strings.Split(wireListing, "\n")
+	wireStrs := strings.Split(wireListing, "\n")
+	wires := make([]Wire, 0)
+	for _, curListing := range wireStrs {
+		wires = append(wires, GetWire(curListing))
+	}
 	//doing pairs, so go from first wire to second-to-last
 	for curWireIndex := 0; curWireIndex < len(wires)-1; curWireIndex++ {
 		//doing pairs, so go from one after current wire to last
@@ -35,26 +39,41 @@ func Challenge3_1(wireListing string) string {
 	return strconv.Itoa(minDist)
 }
 
+func Challenge3_2(wireListing string) string {
+	intersectionSet := make(map[Point]bool)
+	wireStrs := strings.Split(wireListing, "\n")
+	wires := make([]Wire, 0)
+	for _, curListing := range wireStrs {
+		wires = append(wires, GetWire(curListing))
+	}
+	//doing pairs, so go from first wire to second-to-last
+	for curWireIndex := 0; curWireIndex < len(wires)-1; curWireIndex++ {
+		//doing pairs, so go from one after current wire to last
+		for compWireIndex := curWireIndex + 1; compWireIndex < len(wires); compWireIndex++ {
+			wireIntersections := CheckWires(wires[curWireIndex], wires[compWireIndex])
+			for _, intersection := range wireIntersections {
+				intersectionSet[intersection] = true
+			}
+		}
+	}
+	minDist := 99999999
+	for intersection := range intersectionSet {
+		if intersection == (Point{0, 0}) {
+			continue
+		}
+
+	}
+	return strconv.Itoa(minDist)
+}
+
 func ManhattanDistance(a Point, b Point) int {
 	return abs(a.x-b.x) + abs(a.y-b.y)
 }
 
-func CheckWires(wire1 string, wire2 string) []Point {
-	w1Points := GetWirePoints(wire1)
-	w2Points := GetWirePoints(wire2)
-
-	w1Lines := make([]Line, 0)
-	for i := 0; i < len(w1Points)-1; i++ {
-		w1Lines = append(w1Lines, Line{w1Points[i], w1Points[i+1]})
-	}
-	w2Lines := make([]Line, 0)
-	for i := 0; i < len(w2Points)-1; i++ {
-		w2Lines = append(w2Lines, Line{w2Points[i], w2Points[i+1]})
-	}
-
+func CheckWires(wire1 Wire, wire2 Wire) []Point {
 	intersections := make([]Point, 0)
-	for _, line1 := range w1Lines {
-		for _, line2 := range w2Lines {
+	for _, line1 := range wire1.lines {
+		for _, line2 := range wire2.lines {
 			intersection, doesIntersect := CheckLineIntersection(line1, line2)
 			if doesIntersect {
 				intersections = append(intersections, intersection)
@@ -162,6 +181,23 @@ func GetWirePoints(wire string) []Point {
 		points = append(points, curPoint)
 	}
 	return points
+}
+
+type Wire struct {
+	points []Point
+	lines  []Line
+}
+
+func GetWire(wireListing string) Wire {
+	var wire Wire
+
+	wire.points = GetWirePoints(wireListing)
+
+	wire.lines = make([]Line, 0)
+	for i := 0; i < len(wire.points)-1; i++ {
+		wire.lines = append(wire.lines, Line{wire.points[i], wire.points[i+1]})
+	}
+	return wire
 }
 
 type Point struct {
