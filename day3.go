@@ -61,9 +61,37 @@ func Challenge3_2(wireListing string) string {
 		if intersection == (Point{0, 0}) {
 			continue
 		}
+		//assume only 2 wires so I can cheat here
+		w1dist := WireDistanceUntil(wires[0], intersection)
+		w2dist := WireDistanceUntil(wires[1], intersection)
 
+		curDist := w1dist + w2dist
+		if curDist < minDist {
+			//minPoint = intersection
+			minDist = curDist
+		}
 	}
 	return strconv.Itoa(minDist)
+}
+
+func WireDistanceUntil(wire Wire, point Point) int {
+	totalDist := 0 //start with 1, to include the origin
+	for _, line := range wire.lines {
+		minX := min(line.start.x, line.end.x)
+		maxX := max(line.start.x, line.end.x)
+		minY := min(line.start.y, line.end.y)
+		maxY := max(line.start.y, line.end.y)
+
+		//point should equal one, and be between the other two, then it's on it
+		if minX <= point.x && point.x <= maxX && minY <= point.y && point.y <= maxY {
+			remainder := Line{line.start, point}
+			totalDist += remainder.GetLength() - 1
+			return totalDist
+		} else {
+			totalDist += line.GetLength() - 1
+		}
+	}
+	return 0 //we didn't hit
 }
 
 func ManhattanDistance(a Point, b Point) int {
@@ -215,6 +243,13 @@ func (l Line) GetAlignment() Alignment {
 		return Horizontal
 	}
 	return Vertical
+}
+
+func (l Line) GetLength() int {
+	if l.start.x == l.end.x {
+		return abs(l.start.y-l.end.y) + 1
+	}
+	return abs(l.start.x-l.end.x) + 1
 }
 
 type Alignment int
