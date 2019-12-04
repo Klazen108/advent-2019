@@ -17,3 +17,85 @@ func TestDay3Example2(t *testing.T) {
 		t.Errorf("Result was incorrect, got: %s, want: %s.", result, "159")
 	}
 }
+
+func TestDay3Horizontal1Vertical2(t *testing.T) {
+	intersection, doesIntersect := CheckLineIntersection(
+		Line{
+			Point{0, 0}, Point{5, 0},
+		},
+		Line{
+			Point{2, -1}, Point{2, 1},
+		},
+	)
+	if !doesIntersect {
+		t.Errorf("Expected intersection")
+	}
+	if intersection != (Point{2, 0}) {
+		t.Errorf("Expected intersection at %v was %v", Point{2, 0}, intersection)
+	}
+}
+
+func TestDay3Horizontal1Vertical2Flipped(t *testing.T) {
+	intersection, doesIntersect := CheckLineIntersection(
+		Line{
+			Point{0, 0}, Point{-5, 0},
+		},
+		Line{
+			Point{-2, 1}, Point{-2, -1},
+		},
+	)
+	if !doesIntersect {
+		t.Errorf("Expected intersection")
+	}
+	if intersection != (Point{-2, 0}) {
+		t.Errorf("Expected intersection at %v was %v", Point{-2, 0}, intersection)
+	}
+}
+
+func TestDay3Vertical1Horizontal2(t *testing.T) {
+	intersection, doesIntersect := CheckLineIntersection(
+		Line{
+			Point{0, 0}, Point{0, -5},
+		},
+		Line{
+			Point{-2, -1}, Point{2, -1},
+		},
+	)
+	if !doesIntersect {
+		t.Errorf("Expected intersection")
+	}
+	if intersection != (Point{0, -1}) {
+		t.Errorf("Expected intersection at %v was %v", Point{0, -1}, intersection)
+	}
+}
+
+func TestDay3Vertical1Horizontal2Flipped(t *testing.T) {
+	intersection, doesIntersect := CheckLineIntersection(
+		Line{
+			Point{0, 0}, Point{0, 5},
+		},
+		Line{
+			Point{2, 1}, Point{-2, 1},
+		},
+	)
+	if !doesIntersect {
+		t.Errorf("Expected intersection")
+	}
+	if intersection != (Point{0, 1}) {
+		t.Errorf("Expected intersection at %v was %v", Point{0, 1}, intersection)
+	}
+}
+
+func TestDay3Vertical1Horizontal2NoIntersectRight(t *testing.T) {
+	intersection, doesIntersect := CheckLineIntersection(
+		Line{
+			Point{0, 0}, Point{0, -5},
+		},
+		Line{
+			Point{2, -1}, Point{5, -1},
+		},
+	)
+	if doesIntersect {
+		t.Errorf("Expected no intersection, got one at %v", intersection)
+	}
+}

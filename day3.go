@@ -87,20 +87,32 @@ func CheckLineIntersection(line1 Line, line2 Line) (Point, bool) {
 		return Point{0, 0}, false
 	}
 
+	return CheckCross(line1, line2)
+}
+
+func CheckCross(line1 Line, line2 Line) (Point, bool) {
+	var hLine Line
+	var vLine Line
+
 	if line1.GetAlignment() == Horizontal {
-		//l2 must be vertical, so take the x of line 1 and y of line 2
-		minX := min(line1.start.x, line1.end.x)
-		maxX := max(line1.start.x, line1.end.x)
-		if line2.start.x > minX && line2.start.x < maxX {
-			return Point{line1.start.x, line2.start.y}, true
-		}
-		return Point{0, 0}, false
+		hLine = line1
+		vLine = line2
+	} else {
+		hLine = line2
+		vLine = line1
 	}
-	//l2 must be horizontal, so take the y of line 1 and x of line 2
-	minY := min(line1.start.y, line1.end.y)
-	maxY := max(line1.start.y, line1.end.y)
-	if line2.start.y > minY && line2.start.y < maxY {
-		return Point{line2.start.x, line1.start.y}, true
+
+	//l2 must be vertical, so take the x of line 1 and y of line 2
+	minX1 := min(hLine.start.x, hLine.end.x)
+	maxX1 := max(hLine.start.x, hLine.end.x)
+	minY2 := min(vLine.start.y, vLine.end.y)
+	maxY2 := max(vLine.start.y, vLine.end.y)
+	yAxis := hLine.start.y //line 1 is horizontal, Y is same
+	xAxis := vLine.start.x //line 2 is vertical, X is same
+	if minY2 <= yAxis && yAxis <= maxY2 {
+		if minX1 < xAxis && xAxis < maxX1 {
+			return Point{xAxis, yAxis}, true
+		}
 	}
 	return Point{0, 0}, false
 }
