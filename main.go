@@ -10,10 +10,24 @@ import (
 )
 
 func main() {
-	challenge1()
+	challenge2()
+}
+
+func challenge2() {
+	moduleMasses := readModuleMasses()
+
+	spacecraftFuel := getSpacecraftFuel(moduleMasses, true)
+	fmt.Fprintf(os.Stderr, "Fuel required: %f\n", spacecraftFuel)
 }
 
 func challenge1() {
+	moduleMasses := readModuleMasses()
+
+	spacecraftFuel := getSpacecraftFuel(moduleMasses, false)
+	fmt.Fprintf(os.Stderr, "Fuel required: %f\n", spacecraftFuel)
+}
+
+func readModuleMasses() []float64 {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter your list of module masses, in csv format:\n>")
 	text, err := reader.ReadString('\n')
@@ -30,20 +44,25 @@ func challenge1() {
 			os.Exit(102)
 		}
 	}
-
-	spacecraftFuel := getSpacecraftFuel(moduleMasses)
-	fmt.Fprintf(os.Stderr, "Fuel required: %f\n", spacecraftFuel)
+	return moduleMasses
 }
 
-func getModuleFuel(moduleMass float64) float64 {
-	return math.Floor(moduleMass/3) - 2
+func getModuleFuel(moduleMass float64, includeFuelFuel bool) float64 {
+	moduleFuel := math.Floor(moduleMass/3) - 2
+	if moduleFuel <= 0 {
+		return 0
+	}
+	if includeFuelFuel {
+		moduleFuel = moduleFuel + getModuleFuel(moduleFuel, includeFuelFuel)
+	}
+	return moduleFuel
 }
 
-func getSpacecraftFuel(moduleMasses []float64) float64 {
+func getSpacecraftFuel(moduleMasses []float64, includeFuelFuel bool) float64 {
 	moduleFuels := make([]float64, len(moduleMasses))
 	total := 0.0
 	for i, elem := range moduleMasses {
-		moduleFuels[i] = getModuleFuel(elem)
+		moduleFuels[i] = getModuleFuel(elem, includeFuelFuel)
 		total += moduleFuels[i]
 	}
 	return total
