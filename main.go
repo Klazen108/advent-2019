@@ -10,10 +10,10 @@ import (
 )
 
 func main() {
-	Challenge2("")
+	Challenge1_2("")
 }
 
-func Challenge2(massesStr string) string {
+func Challenge1_2(massesStr string) string {
 	var moduleMasses []float64
 	if massesStr == "" {
 		massesStr = readModuleMassesCsv()
@@ -25,7 +25,7 @@ func Challenge2(massesStr string) string {
 	return fmt.Sprintf("%.0f", spacecraftFuel)
 }
 
-func Challenge1(massesStr string) string {
+func Challenge1_1(massesStr string) string {
 	var moduleMasses []float64
 	if massesStr == "" {
 		massesStr = readModuleMassesCsv()
