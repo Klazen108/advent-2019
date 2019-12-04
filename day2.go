@@ -17,6 +17,22 @@ func Challenge2_1(program string) string {
 	return strconv.FormatInt(memory[0], 10)
 }
 
+func Challenge2_2(program string) string {
+	for noun := int64(0); noun <= 99; noun++ {
+		for verb := int64(0); verb <= 99; verb++ {
+			memory := CsvToIntSlice(program)
+			memory[1] = noun
+			memory[2] = verb
+			RunProgram(&memory)
+			if memory[0] == 19690720 {
+				fmt.Fprintf(os.Stderr, "Noun: %d Verb: %d\n", memory[1], memory[2])
+				return fmt.Sprintf("%02d%02d", memory[1], memory[2])
+			}
+		}
+	}
+	return "0000"
+}
+
 func RunProgram(opcodes *[]int64) {
 	pc := 0
 	for {
