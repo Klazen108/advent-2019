@@ -10,24 +10,34 @@ import (
 )
 
 func main() {
-	challenge2()
+	Challenge2("")
 }
 
-func challenge2() {
-	moduleMasses := readModuleMasses()
+func Challenge2(massesStr string) string {
+	var moduleMasses []float64
+	if massesStr == "" {
+		massesStr = readModuleMassesCsv()
+	}
+	moduleMasses = calcModuleMasses(massesStr)
 
 	spacecraftFuel := getSpacecraftFuel(moduleMasses, true)
 	fmt.Fprintf(os.Stderr, "Fuel required: %f\n", spacecraftFuel)
+	return fmt.Sprintf("%.0f", spacecraftFuel)
 }
 
-func challenge1() {
-	moduleMasses := readModuleMasses()
+func Challenge1(massesStr string) string {
+	var moduleMasses []float64
+	if massesStr == "" {
+		massesStr = readModuleMassesCsv()
+	}
+	moduleMasses = calcModuleMasses(massesStr)
 
 	spacecraftFuel := getSpacecraftFuel(moduleMasses, false)
 	fmt.Fprintf(os.Stderr, "Fuel required: %f\n", spacecraftFuel)
+	return fmt.Sprintf("%.0f", spacecraftFuel)
 }
 
-func readModuleMasses() []float64 {
+func readModuleMassesCsv() string {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter your list of module masses, in csv format:\n>")
 	text, err := reader.ReadString('\n')
@@ -35,14 +45,19 @@ func readModuleMasses() []float64 {
 		fmt.Fprintf(os.Stderr, "Error reading module masses: %v\n", err)
 		os.Exit(101)
 	}
-	moduleMassesStr := strings.Split(strings.Trim(text, "\r\n"), ",")
+	return strings.Trim(text, "\r\n")
+}
+
+func calcModuleMasses(massCsv string) []float64 {
+	moduleMassesStr := strings.Split(massCsv, ",")
 	moduleMasses := make([]float64, len(moduleMassesStr))
 	for i, elem := range moduleMassesStr {
-		moduleMasses[i], err = strconv.ParseFloat(elem, 64)
+		massf, err := strconv.ParseFloat(elem, 64)
 		if err != nil {
 			fmt.Fprintf(os.Stderr, "Invalid module mass: '%s'\n", elem)
 			os.Exit(102)
 		}
+		moduleMasses[i] = massf
 	}
 	return moduleMasses
 }
