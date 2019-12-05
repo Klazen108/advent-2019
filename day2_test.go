@@ -22,7 +22,7 @@ func TestDay2_2(t *testing.T) {
 func TestRunProgram_Example1(t *testing.T) {
 	memory := CsvToIntSlice("1,0,0,0,99")
 	RunProgram(&memory)
-	msmCsv := getMemoryAsCsv(memory)
+	msmCsv := GetMemoryAsCsv(memory)
 	if msmCsv != "2,0,0,0,99" {
 		t.Errorf("Memory was incorrect, got: %s, want: %s.", msmCsv, "2,0,0,0,99")
 	}
@@ -30,7 +30,7 @@ func TestRunProgram_Example1(t *testing.T) {
 func TestRunProgram_Example2(t *testing.T) {
 	memory := CsvToIntSlice("2,3,0,3,99")
 	RunProgram(&memory)
-	msmCsv := getMemoryAsCsv(memory)
+	msmCsv := GetMemoryAsCsv(memory)
 	if msmCsv != "2,3,0,6,99" {
 		t.Errorf("Memory was incorrect, got: %s, want: %s.", msmCsv, "2,3,0,6,99")
 	}
@@ -38,7 +38,7 @@ func TestRunProgram_Example2(t *testing.T) {
 func TestRunProgram_Example3(t *testing.T) {
 	memory := CsvToIntSlice("2,4,4,5,99,0")
 	RunProgram(&memory)
-	msmCsv := getMemoryAsCsv(memory)
+	msmCsv := GetMemoryAsCsv(memory)
 	if msmCsv != "2,4,4,5,99,9801" {
 		t.Errorf("Memory was incorrect, got: %s, want: %s.", msmCsv, "2,4,4,5,99,9801")
 	}
@@ -46,13 +46,13 @@ func TestRunProgram_Example3(t *testing.T) {
 func TestRunProgram_Example4(t *testing.T) {
 	memory := CsvToIntSlice("1,1,1,4,99,5,6,0,99")
 	RunProgram(&memory)
-	msmCsv := getMemoryAsCsv(memory)
+	msmCsv := GetMemoryAsCsv(memory)
 	if msmCsv != "30,1,1,4,2,5,6,0,99" {
 		t.Errorf("Memory was incorrect, got: %s, want: %s.", msmCsv, "30,1,1,4,2,5,6,0,99")
 	}
 }
 
-func getMemoryAsCsv(memory []int64) string {
+func GetMemoryAsCsv(memory []int64) string {
 	valuesText := []string{}
 
 	for i := range memory {
