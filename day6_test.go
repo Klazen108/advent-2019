@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"testing"
 )
 
@@ -2221,8 +2222,8 @@ func TestDay6_1(t *testing.T) {
 	KP3)B5R
 	JDK)XLL
 	GWJ)J5G`)
-	if result != "42" {
-		t.Errorf("Result was incorrect, got: %s, want: %s.", result, "42")
+	if result != "402879" {
+		t.Errorf("Result was incorrect, got: %s, want: %s.", result, "402879")
 	}
 }
 
@@ -2240,6 +2241,44 @@ func TestDay6_1Example(t *testing.T) {
 	K)L`)
 	if result != "42" {
 		t.Errorf("Result was incorrect, got: %s, want: %s.", result, "42")
+	}
+}
+
+func TestParseMapData(t *testing.T) {
+	satMap := ParseMapData(`COM)B
+	B)C
+	C)D
+	D)E
+	E)F
+	B)G
+	G)H
+	D)I
+	E)J
+	J)K
+	K)L`)
+
+	for k, v := range satMap {
+		fmt.Printf("%s: ", k)
+		for _, s := range v.satellites {
+			fmt.Printf("%s ", s.name)
+		}
+		fmt.Printf("\n")
+	}
+
+	if len(satMap["I"].satellites) != 0 {
+		t.Errorf("L should have 0 satellites")
+	}
+
+	if len(satMap["H"].satellites) != 0 {
+		t.Errorf("L should have 0 satellites")
+	}
+
+	if len(satMap["F"].satellites) != 0 {
+		t.Errorf("L should have 0 satellites")
+	}
+
+	if len(satMap["L"].satellites) != 0 {
+		t.Errorf("L should have 0 satellites")
 	}
 }
 
@@ -2262,8 +2301,8 @@ func TestCountsIndirectOrbits(t *testing.T) {
 	b.satellites = append(b.satellites, c)
 	c.satellites = append(c.satellites, d)
 
-	orbits := a.CountOrbits()
-	if orbits != 3 {
-		t.Errorf("Result was incorrect, got: %d, want: %d.", orbits, 3)
+	orbits := a.CountOrbitsRoot()
+	if orbits != 6 {
+		t.Errorf("Result was incorrect, got: %d, want: %d.", orbits, 6)
 	}
 }

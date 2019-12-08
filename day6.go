@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -9,7 +8,7 @@ import (
 func Challenge6_1(mapData string) string {
 	satMap := ParseMapData(mapData)
 	com := satMap.GetAdd("COM")
-	orbitCount := com.CountOrbits()
+	orbitCount := com.CountOrbitsRoot()
 	return strconv.Itoa(orbitCount)
 }
 
@@ -20,11 +19,11 @@ func ParseMapData(mapData string) SatMap {
 
 	for _, entry := range entries {
 		parsed := strings.Split(entry, ")")
-		planetName := parsed[0]
+		planetName := strings.Trim(parsed[0], "\t\r\n ")
 		satName := parsed[1]
 		planet := satMap.GetAdd(planetName)
 		satellite := satMap.GetAdd(satName)
-		fmt.Printf("%s <- %s\n", planetName, satName)
+		//fmt.Printf("%s <- %s\n", planetName, satName)
 		planet.satellites = append(planet.satellites, satellite)
 	}
 
@@ -47,12 +46,14 @@ type Object struct {
 	satellites []*Object
 }
 
-func (s Object) CountOrbits() int {
-	directOrbits := len(s.satellites)
-	indirectOrbits := 0
+func (s Object) CountOrbits(depth int) int {
+	indirectOrbitsDepth := 0
 	for _, satellite := range s.satellites {
-		indirectOrbits += satellite.CountOrbits()
+		indirectOrbitsDepth += satellite.CountOrbits(depth + 1)
 	}
-	fmt.Printf("%s: %d + %d\n", s.name, directOrbits, indirectOrbits)
-	return directOrbits + indirectOrbits
+	return depth + indirectOrbitsDepth
+}
+
+func (s Object) CountOrbitsRoot() int {
+	return s.CountOrbits(0)
 }
