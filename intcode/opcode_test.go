@@ -6,7 +6,8 @@ import (
 )
 
 func TestLoadInstruction_1(t *testing.T) {
-	memory := []Byte{99}
+	memory := make(map[int]Byte)
+	memory[0] = 99
 	inst := LoadInstruction(0, memory)
 
 	_, ok := inst.(HltInst)
@@ -17,7 +18,11 @@ func TestLoadInstruction_1(t *testing.T) {
 }
 
 func TestLoadInstruction_4(t *testing.T) {
-	memory := []Byte{1, 2, 3, 1}
+	memory := make(map[int]Byte)
+	memory[0] = 1
+	memory[1] = 2
+	memory[2] = 3
+	memory[3] = 1
 	inst := LoadInstruction(0, memory)
 
 	_, ok := inst.(AddInst)

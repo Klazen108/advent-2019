@@ -5,18 +5,37 @@ import (
 	"strconv"
 )
 
-func (op RawInstruction) GetParamVal(parmIndex int, memory []Byte, forceImm bool) Byte {
+func (op RawInstruction) GetParamVal(parmIndex int, memory map[int]Byte, forceImm bool, relativeBase int) Byte {
 	var operand1 Byte
 	if (op.ParamMode(parmIndex, memory) == Immediate) || forceImm {
 		operand1 = memory[op.rawLoc+1+parmIndex]
-	} else {
-		operand1Addr := memory[op.rawLoc+1+parmIndex]
+		fmt.Printf("IMM: %d\n", operand1)
+	} else if op.ParamMode(parmIndex, memory) == Relative {
+		offset := memory[op.rawLoc+1+parmIndex]
+		//operand1Addr := memory[relativeBase+int(offset)]
+		operand1Addr := relativeBase + int(offset)
 		operand1 = memory[operand1Addr]
+		fmt.Printf("REL: mem[%d + %d]=%d\n", relativeBase, int(offset), operand1)
+	} else {
+		operand1Addr := int(memory[op.rawLoc+1+parmIndex])
+		operand1 = memory[operand1Addr]
+		fmt.Printf("POS: mem[%d]=%d\n", operand1Addr, operand1)
 	}
 	return operand1
 }
 
-func (op RawInstruction) ParamMode(pos int, memory []Byte) Mode {
+func (op RawInstruction) GetTargetAddr(parmIndex int, memory map[int]Byte, relativeBase int) int {
+	var targetAddr int
+	if op.ParamMode(0, memory) == Relative {
+		offset := memory[op.rawLoc+1+0]
+		targetAddr = relativeBase + int(offset)
+	} else {
+		targetAddr = int(op.rawLoc + 1 + 0)
+	}
+	return targetAddr
+}
+
+func (op RawInstruction) ParamMode(pos int, memory map[int]Byte) Mode {
 	rawOp := memory[op.rawLoc]
 
 	codeStr := strconv.Itoa(int(rawOp))
@@ -29,7 +48,7 @@ func (op RawInstruction) ParamMode(pos int, memory []Byte) Mode {
 	return Mode(mode)
 }
 
-func LoadInstruction(pos int, memory []Byte) Instruction {
+func LoadInstruction(pos int, memory map[int]Byte) Instruction {
 	rawInst := RawInstruction{
 		pos,
 		make([]Operand, 0),
@@ -51,11 +70,13 @@ func LoadInstruction(pos int, memory []Byte) Instruction {
 	case 6:
 		inst = JeqInst(rawInst)
 	case 7:
-		return SltInst(rawInst)
+		inst = SltInst(rawInst)
 	case 8:
-		return SeqInst(rawInst)
+		inst = SeqInst(rawInst)
+	case 9:
+		inst = SrbInst(rawInst)
 	case 99:
-		return HltInst(rawInst)
+		inst = HltInst(rawInst)
 	default:
 		panic(fmt.Sprintf("Unsupported Opcode: %d", opcode.Code()))
 	}
@@ -108,6 +129,7 @@ type Mode int
 const (
 	Position  Mode = 0
 	Immediate Mode = 1
+	Relative  Mode = 2
 )
 
 type Instruction interface {
@@ -119,11 +141,11 @@ type Instruction interface {
 type AddInst RawInstruction
 
 func (i AddInst) Execute(comp *IntcodeComputer) bool {
-	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false)
-	operand2 := RawInstruction(i).GetParamVal(1, comp.memory, false)
-	targetAddr := RawInstruction(i).GetParamVal(2, comp.memory, true)
+	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false, comp.relativeBase)
+	operand2 := RawInstruction(i).GetParamVal(1, comp.memory, false, comp.relativeBase)
+	targetAddr := RawInstruction(i).GetTargetAddr(2, comp.memory, comp.relativeBase)
 	res := operand1 + operand2
-	comp.memory[targetAddr] = res
+	comp.memory[int(targetAddr)] = res
 	return true
 }
 func (i AddInst) Length() int {
@@ -133,12 +155,12 @@ func (i AddInst) Length() int {
 type MulInst RawInstruction
 
 func (i MulInst) Execute(comp *IntcodeComputer) bool {
-	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false)
-	operand2 := RawInstruction(i).GetParamVal(1, comp.memory, false)
-	targetAddr := RawInstruction(i).GetParamVal(2, comp.memory, true)
+	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false, comp.relativeBase)
+	operand2 := RawInstruction(i).GetParamVal(1, comp.memory, false, comp.relativeBase)
+	targetAddr := RawInstruction(i).GetTargetAddr(2, comp.memory, comp.relativeBase)
 
 	res := operand1 * operand2
-	comp.memory[targetAddr] = res
+	comp.memory[int(targetAddr)] = res
 	return true
 }
 func (i MulInst) Length() int {
@@ -148,7 +170,7 @@ func (i MulInst) Length() int {
 type InpInst RawInstruction
 
 func (i InpInst) Execute(comp *IntcodeComputer) bool {
-	targetAddr := RawInstruction(i).GetParamVal(0, comp.memory, true)
+	targetAddr := RawInstruction(i).GetTargetAddr(0, comp.memory, comp.relativeBase)
 	value, hadInput := comp.GetInput()
 	if !hadInput {
 		comp.Halt(true)
@@ -164,7 +186,7 @@ func (i InpInst) Length() int {
 type OutInst RawInstruction
 
 func (i OutInst) Execute(comp *IntcodeComputer) bool {
-	output := RawInstruction(i).GetParamVal(0, comp.memory, false)
+	output := RawInstruction(i).GetParamVal(0, comp.memory, false, comp.relativeBase)
 	comp.Output(output)
 	return true
 }
@@ -175,8 +197,8 @@ func (i OutInst) Length() int {
 type JneInst RawInstruction
 
 func (i JneInst) Execute(comp *IntcodeComputer) bool {
-	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false)
-	operand2 := RawInstruction(i).GetParamVal(1, comp.memory, false)
+	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false, comp.relativeBase)
+	operand2 := RawInstruction(i).GetParamVal(1, comp.memory, false, comp.relativeBase)
 
 	if operand1 != 0 {
 		comp.pc = int(operand2)
@@ -191,8 +213,8 @@ func (i JneInst) Length() int {
 type JeqInst RawInstruction
 
 func (i JeqInst) Execute(comp *IntcodeComputer) bool {
-	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false)
-	operand2 := RawInstruction(i).GetParamVal(1, comp.memory, false)
+	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false, comp.relativeBase)
+	operand2 := RawInstruction(i).GetParamVal(1, comp.memory, false, comp.relativeBase)
 
 	if operand1 == 0 {
 		comp.pc = int(operand2)
@@ -207,14 +229,14 @@ func (i JeqInst) Length() int {
 type SltInst RawInstruction
 
 func (i SltInst) Execute(comp *IntcodeComputer) bool {
-	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false)
-	operand2 := RawInstruction(i).GetParamVal(1, comp.memory, false)
-	targetAddr := RawInstruction(i).GetParamVal(2, comp.memory, true)
+	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false, comp.relativeBase)
+	operand2 := RawInstruction(i).GetParamVal(1, comp.memory, false, comp.relativeBase)
+	targetAddr := RawInstruction(i).GetTargetAddr(2, comp.memory, comp.relativeBase)
 
 	if operand1 < operand2 {
-		comp.memory[targetAddr] = 1
+		comp.memory[int(targetAddr)] = 1
 	} else {
-		comp.memory[targetAddr] = 0
+		comp.memory[int(targetAddr)] = 0
 	}
 	return true
 }
@@ -225,14 +247,14 @@ func (i SltInst) Length() int {
 type SeqInst RawInstruction
 
 func (i SeqInst) Execute(comp *IntcodeComputer) bool {
-	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false)
-	operand2 := RawInstruction(i).GetParamVal(1, comp.memory, false)
-	targetAddr := RawInstruction(i).GetParamVal(2, comp.memory, true)
+	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false, comp.relativeBase)
+	operand2 := RawInstruction(i).GetParamVal(1, comp.memory, false, comp.relativeBase)
+	targetAddr := RawInstruction(i).GetTargetAddr(2, comp.memory, comp.relativeBase)
 
 	if operand1 == operand2 {
-		comp.memory[targetAddr] = 1
+		comp.memory[int(targetAddr)] = 1
 	} else {
-		comp.memory[targetAddr] = 0
+		comp.memory[int(targetAddr)] = 0
 	}
 	return true
 }
@@ -248,4 +270,22 @@ func (i HltInst) Execute(comp *IntcodeComputer) bool {
 }
 func (i HltInst) Length() int {
 	return 1
+}
+
+type SrbInst RawInstruction
+
+func (i SrbInst) Execute(comp *IntcodeComputer) bool {
+	operand1 := RawInstruction(i).GetParamVal(0, comp.memory, false, comp.relativeBase)
+	if comp.debug {
+		fmt.Printf("relBase addend = %d\n", operand1)
+	}
+
+	comp.relativeBase += int(operand1)
+	if comp.debug {
+		fmt.Printf("relBase now = %d\n", comp.relativeBase)
+	}
+	return true
+}
+func (i SrbInst) Length() int {
+	return 2
 }

@@ -1,42 +1,73 @@
 package intcode
 
+import "fmt"
+
 type Byte int
 
 type IntcodeComputer struct {
-	memory       []Byte
+	memory       map[int]Byte
 	pc           int
 	halt         bool
 	pendingInput bool
+	relativeBase int
+	debug        bool
 
 	outputBuffer []Byte
 	inputBuffer  []Byte
 }
 
 func NewComputer(memory []Byte) IntcodeComputer {
+	mem := make(map[int]Byte)
+	for i, b := range memory {
+		mem[i] = b
+	}
 	return IntcodeComputer{
-		memory,
+		mem,
 		0,
 		false,
+		false,
+		0,
 		false,
 		[]Byte{},
 		[]Byte{},
 	}
 }
 
-func (comp IntcodeComputer) Reset() {
+func (comp *IntcodeComputer) SetDebug(debugMode bool) {
+	comp.debug = debugMode
+}
+
+func (comp *IntcodeComputer) Reset() {
 	comp.pc = 0
 	comp.outputBuffer = make([]Byte, 0)
 	comp.inputBuffer = make([]Byte, 0)
 	comp.halt = false
 }
 
-func (comp IntcodeComputer) Load(memory []Byte) {
-	comp.memory = memory
+func (comp *IntcodeComputer) Load(memory []Byte) {
+	comp.memory = make(map[int]Byte)
+	for i, b := range memory {
+		comp.memory[i] = b
+	}
 }
 
 func (comp *IntcodeComputer) Execute() {
+	defer func() {
+		if r := recover(); r != nil {
+			panic(fmt.Sprintf(
+				"Kernel Panic, opcode [%T] [%d,%d,%d,%d] pc [%d] rb [%d] error [%v]",
+				LoadInstruction(comp.pc, comp.memory),
+				comp.memory[comp.pc],
+				comp.memory[comp.pc+1],
+				comp.memory[comp.pc+2],
+				comp.memory[comp.pc+3],
+				comp.pc,
+				comp.relativeBase,
+				r))
+		}
+	}()
+
 	comp.halt = false
-	//fmt.Printf("PC=%d\n", comp.pc)
 	i := 0
 	for comp.Tick() {
 		i++
@@ -50,7 +81,9 @@ func (comp *IntcodeComputer) Execute() {
 
 func (comp *IntcodeComputer) Tick() bool {
 	inst := LoadInstruction(comp.pc, comp.memory)
-	//fmt.Printf("%T\n", inst)
+	if comp.debug {
+		fmt.Printf("%T\n", inst)
+	}
 	if inst.Execute(comp) {
 		comp.pc += inst.Length()
 	}
@@ -72,6 +105,9 @@ func (comp *IntcodeComputer) GetInput() (Byte, bool) {
 }
 
 func (comp *IntcodeComputer) Output(val Byte) {
+	if comp.debug {
+		fmt.Printf(">>out:%d\n", val)
+	}
 	comp.outputBuffer = append(comp.outputBuffer, val)
 }
 
@@ -91,6 +127,10 @@ func (comp *IntcodeComputer) GetOutput() Byte {
 	val := comp.outputBuffer[0]
 	comp.outputBuffer = comp.outputBuffer[1:]
 	return val
+}
+
+func (comp *IntcodeComputer) InspectOutput() []Byte {
+	return comp.outputBuffer
 }
 
 func (comp *IntcodeComputer) IsPendingInput() bool {
