@@ -1,7 +1,5 @@
 package intcode
 
-import "fmt"
-
 type Byte int
 
 type IntcodeComputer struct {
@@ -42,18 +40,19 @@ func (comp *IntcodeComputer) Execute() {
 			panic("Infinite loop detected")
 		}
 	}
+	//fmt.Printf("Execution Complete\n")
 }
 
 func (comp *IntcodeComputer) Tick() bool {
 	inst := LoadInstruction(comp.pc, comp.memory)
-	fmt.Printf("%T\n", inst)
+	//fmt.Printf("%T\n", inst)
 	if inst.Execute(comp) {
 		comp.pc += inst.Length()
 	}
 	return !comp.halt
 }
 
-func (comp IntcodeComputer) GetInput() Byte {
+func (comp *IntcodeComputer) GetInput() Byte {
 	if len(comp.inputBuffer) == 0 {
 		panic("Error: Input buffer empty")
 	}
@@ -63,7 +62,6 @@ func (comp IntcodeComputer) GetInput() Byte {
 }
 
 func (comp *IntcodeComputer) Output(val Byte) {
-	fmt.Printf("Outputting: %d\n", val)
 	comp.outputBuffer = append(comp.outputBuffer, val)
 }
 
@@ -73,4 +71,13 @@ func (comp *IntcodeComputer) ProvideInput(val Byte) {
 
 func (comp *IntcodeComputer) Halt() {
 	comp.halt = true
+}
+
+func (comp *IntcodeComputer) GetOutput() Byte {
+	if len(comp.outputBuffer) == 0 {
+		panic("Error: Output buffer empty")
+	}
+	val := comp.outputBuffer[0]
+	comp.outputBuffer = comp.outputBuffer[1:]
+	return val
 }

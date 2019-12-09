@@ -124,7 +124,6 @@ func (i AddInst) Execute(comp *IntcodeComputer) bool {
 	targetAddr := RawInstruction(i).GetParamVal(2, comp.memory, true)
 	res := operand1 + operand2
 	comp.memory[targetAddr] = res
-	comp.Halt()
 	return true
 }
 func (i AddInst) Length() int {
