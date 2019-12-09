@@ -27,6 +27,24 @@ func Challenge7_1(amplifierProgram string) string {
 	return strconv.Itoa(maxSignal)
 }
 
+func Challenge7_2(amplifierProgram string) string {
+	possiblePhaseSequences := permutations([]int{5, 6, 7, 8, 9})
+	maxSignal := 0
+	for _, possSeq := range possiblePhaseSequences {
+		phaseSequence := make([]string, len(possSeq))
+		for i, char := range possSeq {
+			phaseSequence[i] = strconv.Itoa(char)
+		}
+		signal := TestPhaseSequence(amplifierProgram, strings.Join(phaseSequence, ","))
+		if signal > maxSignal {
+			maxSignal = signal
+		}
+		fmt.Printf("%s: %d\n", strings.Join(phaseSequence, ","), signal)
+	}
+
+	return strconv.Itoa(maxSignal)
+}
+
 func permutations(arr []int) [][]int {
 	var helper func([]int, int)
 	res := [][]int{}
@@ -58,34 +76,66 @@ func permutations(arr []int) [][]int {
 func TestPhaseSequence(amplifierProgram string, phaseSequence string) int {
 	program := ParseProgram(amplifierProgram)
 	phases := ParseProgram(phaseSequence)
-	amplifierChain := make([]Amplifier, len(phases))
+	amplifierChain := make([]*Amplifier, len(phases))
+
+	for i := 0; i < len(phases); i++ {
+		amp := NewAmplifier(program, int(phases[i]))
+		amplifierChain[i] = &amp
+	}
 
 	output := 0
-	for i, amplifier := range amplifierChain {
-		amplifier = NewAmplifier(program, int(phases[i]))
-		output = amplifier.Compute(output)
+	eee := 0
+	pendingInput := true
+	for pendingInput {
+		pendingInput = false
+		for _, amplifier := range amplifierChain {
+			curOutput, curPendingInput := amplifier.Compute(output)
+			pendingInput = curPendingInput
+			output = curOutput
+		}
+		eee++
+		if eee >= 5000 {
+			fmt.Printf("wtf")
+			break
+		}
 	}
 	return int(output)
 }
 
-func (amp Amplifier) Compute(input int) int {
-	amp.computer.Reset()
-	amp.computer.ProvideInput(intcode.Byte(amp.phase))
-	amp.computer.ProvideInput(intcode.Byte(input))
-	amp.computer.Execute()
-	return int(amp.computer.GetOutput())
+func (amp *Amplifier) Compute(input int) (int, bool) {
+	if !amp.hasRun || amp.computer.IsPendingInput() {
+		amp.computer.ProvideInput(intcode.Byte(input))
+		amp.computer.Execute()
+		amp.hasRun = true
+
+		defer func() {
+			if r := recover(); r != nil {
+				fmt.Println("Recovered in f", r)
+			}
+		}()
+		amp.output = int(amp.computer.GetOutput())
+	}
+	return amp.output, amp.computer.IsPendingInput()
 }
 
 func NewAmplifier(program []intcode.Byte, phase int) Amplifier {
-	return Amplifier{
-		intcode.NewComputer(program),
+	comp := intcode.NewComputer(program)
+	amp := Amplifier{
+		&comp,
 		phase,
+		false,
+		0,
 	}
+	amp.computer.Reset()
+	amp.computer.ProvideInput(intcode.Byte(amp.phase))
+	return amp
 }
 
 type Amplifier struct {
-	computer intcode.IntcodeComputer
+	computer *intcode.IntcodeComputer
 	phase    int
+	hasRun   bool
+	output   int
 }
 
 func ParseProgram(csvInput string) []intcode.Byte {

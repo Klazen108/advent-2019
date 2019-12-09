@@ -149,7 +149,12 @@ type InpInst RawInstruction
 
 func (i InpInst) Execute(comp *IntcodeComputer) bool {
 	targetAddr := RawInstruction(i).GetParamVal(0, comp.memory, true)
-	comp.memory[targetAddr] = comp.GetInput()
+	value, hadInput := comp.GetInput()
+	if !hadInput {
+		comp.Halt(true)
+		return false
+	}
+	comp.memory[targetAddr] = value
 	return true
 }
 func (i InpInst) Length() int {
@@ -238,7 +243,7 @@ func (i SeqInst) Length() int {
 type HltInst RawInstruction
 
 func (i HltInst) Execute(comp *IntcodeComputer) bool {
-	comp.Halt()
+	comp.Halt(false)
 	return false
 }
 func (i HltInst) Length() int {

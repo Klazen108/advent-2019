@@ -3,9 +3,10 @@ package intcode
 type Byte int
 
 type IntcodeComputer struct {
-	memory []Byte
-	pc     int
-	halt   bool
+	memory       []Byte
+	pc           int
+	halt         bool
+	pendingInput bool
 
 	outputBuffer []Byte
 	inputBuffer  []Byte
@@ -15,6 +16,7 @@ func NewComputer(memory []Byte) IntcodeComputer {
 	return IntcodeComputer{
 		memory,
 		0,
+		false,
 		false,
 		[]Byte{},
 		[]Byte{},
@@ -33,6 +35,8 @@ func (comp IntcodeComputer) Load(memory []Byte) {
 }
 
 func (comp *IntcodeComputer) Execute() {
+	comp.halt = false
+	//fmt.Printf("PC=%d\n", comp.pc)
 	i := 0
 	for comp.Tick() {
 		i++
@@ -40,6 +44,7 @@ func (comp *IntcodeComputer) Execute() {
 			panic("Infinite loop detected")
 		}
 	}
+	//fmt.Printf("PC=%d\n", comp.pc)
 	//fmt.Printf("Execution Complete\n")
 }
 
@@ -49,16 +54,21 @@ func (comp *IntcodeComputer) Tick() bool {
 	if inst.Execute(comp) {
 		comp.pc += inst.Length()
 	}
+	//fmt.Printf("PC=%d\n", comp.pc)
 	return !comp.halt
 }
 
-func (comp *IntcodeComputer) GetInput() Byte {
+// GetInput gets an input from the computer.
+// If returns true, then a value may be processed. If false, computer
+// should halt and wait for input - reexecution will proceed
+// from the halted instruction
+func (comp *IntcodeComputer) GetInput() (Byte, bool) {
 	if len(comp.inputBuffer) == 0 {
-		panic("Error: Input buffer empty")
+		return 0, false
 	}
 	val := comp.inputBuffer[0]
 	comp.inputBuffer = comp.inputBuffer[1:]
-	return val
+	return val, true
 }
 
 func (comp *IntcodeComputer) Output(val Byte) {
@@ -69,7 +79,8 @@ func (comp *IntcodeComputer) ProvideInput(val Byte) {
 	comp.inputBuffer = append(comp.inputBuffer, val)
 }
 
-func (comp *IntcodeComputer) Halt() {
+func (comp *IntcodeComputer) Halt(pendingInput bool) {
+	comp.pendingInput = pendingInput
 	comp.halt = true
 }
 
@@ -80,4 +91,12 @@ func (comp *IntcodeComputer) GetOutput() Byte {
 	val := comp.outputBuffer[0]
 	comp.outputBuffer = comp.outputBuffer[1:]
 	return val
+}
+
+func (comp *IntcodeComputer) IsPendingInput() bool {
+	return comp.pendingInput
+}
+
+func (comp *IntcodeComputer) GetPC() int {
+	return comp.pc
 }
