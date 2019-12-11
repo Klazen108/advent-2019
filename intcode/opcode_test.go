@@ -70,3 +70,19 @@ func TestOutInstruction(t *testing.T) {
 		t.Errorf("Expected output of 1337, got %d", comp.outputBuffer[0])
 	}
 }
+
+func TestInpInstructionRelAddr(t *testing.T) {
+	relBase := Byte(1)
+	offset := Byte(-1)
+	valueToStore := Byte(5)
+	comp := NewComputer([]Byte{109, relBase, 203, offset, 99})
+
+	comp.ProvideInput(valueToStore)
+	comp.Execute()
+
+	addr := int(relBase + offset)
+	if comp.memory[addr] != valueToStore {
+		t.Errorf("Expected %d at position %d, got %d",
+			valueToStore, addr, comp.memory[addr])
+	}
+}
