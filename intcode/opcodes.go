@@ -27,7 +27,7 @@ func (op RawInstruction) GetParamVal(parmIndex int, memory map[int]Byte, forceIm
 func (op RawInstruction) GetTargetAddr(parmIndex int, memory map[int]Byte, relativeBase int) int {
 	var targetAddr int
 	value := int(memory[op.rawLoc+1+parmIndex])
-	if op.ParamMode(0, memory) == Relative {
+	if op.ParamMode(parmIndex, memory) == Relative {
 		targetAddr = relativeBase + value
 	} else {
 		targetAddr = value
@@ -40,6 +40,7 @@ func (op RawInstruction) ParamMode(pos int, memory map[int]Byte) Mode {
 
 	codeStr := strconv.Itoa(int(rawOp))
 	i := len(codeStr) - 1 - 2 - pos
+	fmt.Printf("%d\n", i)
 	if i < 0 {
 		return Position //value omitted, assume 0
 	}

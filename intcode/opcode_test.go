@@ -86,3 +86,20 @@ func TestInpInstructionRelAddr(t *testing.T) {
 			valueToStore, addr, comp.memory[addr])
 	}
 }
+
+func TestMulInstructionRelAddr(t *testing.T) {
+	relBase := Byte(1)
+	offset := Byte(-1)
+	valueToStore := Byte(5) * Byte(3)
+	comp := NewComputer([]Byte{109, relBase, 21102, 3, 5, offset, 99})
+
+	comp.ProvideInput(valueToStore)
+	comp.SetDebug(true)
+	comp.Execute()
+
+	addr := int(relBase + offset)
+	if comp.memory[addr] != valueToStore {
+		t.Errorf("Expected %d at position %d, got %d",
+			valueToStore, addr, comp.memory[addr])
+	}
+}
