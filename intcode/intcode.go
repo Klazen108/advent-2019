@@ -71,7 +71,7 @@ func (comp *IntcodeComputer) Execute() {
 	i := 0
 	for comp.Tick() {
 		i++
-		if i > 1000 {
+		if i > 1000000 {
 			panic("Infinite loop detected")
 		}
 	}

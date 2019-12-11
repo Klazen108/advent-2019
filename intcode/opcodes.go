@@ -9,17 +9,17 @@ func (op RawInstruction) GetParamVal(parmIndex int, memory map[int]Byte, forceIm
 	var operand1 Byte
 	if (op.ParamMode(parmIndex, memory) == Immediate) || forceImm {
 		operand1 = memory[op.rawLoc+1+parmIndex]
-		fmt.Printf("IMM: %d\n", operand1)
+		//fmt.Printf("IMM: %d\n", operand1)
 	} else if op.ParamMode(parmIndex, memory) == Relative {
 		offset := memory[op.rawLoc+1+parmIndex]
 		//operand1Addr := memory[relativeBase+int(offset)]
 		operand1Addr := relativeBase + int(offset)
 		operand1 = memory[operand1Addr]
-		fmt.Printf("REL: mem[%d + %d]=%d\n", relativeBase, int(offset), operand1)
+		//fmt.Printf("REL: mem[%d + %d]=%d\n", relativeBase, int(offset), operand1)
 	} else {
 		operand1Addr := int(memory[op.rawLoc+1+parmIndex])
 		operand1 = memory[operand1Addr]
-		fmt.Printf("POS: mem[%d]=%d\n", operand1Addr, operand1)
+		//fmt.Printf("POS: mem[%d]=%d\n", operand1Addr, operand1)
 	}
 	return operand1
 }
@@ -40,7 +40,7 @@ func (op RawInstruction) ParamMode(pos int, memory map[int]Byte) Mode {
 
 	codeStr := strconv.Itoa(int(rawOp))
 	i := len(codeStr) - 1 - 2 - pos
-	fmt.Printf("%d\n", i)
+	//fmt.Printf("%d\n", i)
 	if i < 0 {
 		return Position //value omitted, assume 0
 	}

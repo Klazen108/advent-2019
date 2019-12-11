@@ -7,13 +7,12 @@ import (
 	"github.com/klazen108/advent-2019/intcode"
 )
 
-func Challenge9_1(input string) string {
-	program := ParseProgram(input)
+func Challenge9_1(pgm string, mode int) string {
+	program := ParseProgram(pgm)
 
 	comp := intcode.NewComputer(program)
 	comp.Reset()
-	comp.ProvideInput(1)
-	comp.SetDebug(true)
+	comp.ProvideInput(intcode.Byte(mode))
 	comp.Execute()
 
 	outStrs := make([]string, len(comp.InspectOutput()))
