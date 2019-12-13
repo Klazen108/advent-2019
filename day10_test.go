@@ -39,7 +39,7 @@ func TestDay10_1(t *testing.T) {
 	.#.#..###.#..#...#....#.###.#..#.
 	............#...#...#.......#.#..
 	.........###.#.....#..##..#.##...`
-	output := GetBestPosition(input)
+	output := Challenge10_1(input)
 	if output.detectedAsteroids != 314 {
 		t.Errorf("Expected 314 detected asteroids, got %+v", output)
 	}
@@ -52,7 +52,7 @@ func TestDay10_1_Example1(t *testing.T) {
 #####
 ....#
 ...##`
-	output := GetBestPosition(input)
+	output := Challenge10_1(input)
 	if output.detectedAsteroids != 8 {
 		t.Errorf("Expected 8 detected asteroids, got %+v", output)
 	}
@@ -70,7 +70,7 @@ func TestDay10_1_Example2(t *testing.T) {
 .##.#..###
 ##...#..#.
 .#....####`
-	output := GetBestPosition(input)
+	output := Challenge10_1(input)
 	if output.detectedAsteroids != 33 {
 		t.Errorf("Expected 33 detected asteroids, got %+v", output)
 	}

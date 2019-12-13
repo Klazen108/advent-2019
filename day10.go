@@ -1,14 +1,19 @@
 package main
 
 import (
+	"fmt"
 	"strings"
 )
 
-func Challenge10_1(mapStr string, mode int) string {
+func Challenge10_1(mapStr string) Detector {
+	return GetBestPosition(GetAsteroids(mapStr))
+}
+
+func Challenge10_2(mapStr string) string {
 	return ""
 }
 
-func GetBestPosition(mapStr string) Detector {
+func GetAsteroids(mapStr string) []*Detector {
 	asteroidList := make([]*Detector, 0)
 	for y, line := range strings.Split(strings.ReplaceAll(mapStr, "\r", ""), "\n") {
 		for x, char := range line {
@@ -17,30 +22,40 @@ func GetBestPosition(mapStr string) Detector {
 			}
 		}
 	}
+	return asteroidList
+}
 
-	for di, detector := range asteroidList {
-		for ti, target := range asteroidList {
-			if di == ti {
+func GetVisibleAsteroids(asteroid Detector, asteroidList []*Detector) []*Detector {
+	detectedAsteroids := make([]*Detector, 0)
+	for _, target := range asteroidList {
+		if asteroid.position == target.position {
+			continue
+		}
+		sightLine := Line{asteroid.position, target.position}
+
+		isBlocked := false
+		for _, blocker := range asteroidList {
+			if blocker.position == asteroid.position || blocker.position == target.position {
 				continue
 			}
-			sightLine := Line{detector.position, target.position}
-
-			isBlocked := false
-			for bi, blocker := range asteroidList {
-				if bi == di || bi == ti {
-					continue
-				}
-				if IsOnLine(sightLine, blocker.position) {
-					//fmt.Printf("%+v -> %+v blocked by %+v\n", detector.position, target.position, blocker.position)
-					isBlocked = true
-					break
-				}
-			}
-			if !isBlocked {
-				//fmt.Printf("%+v -> %+v detected\n", detector.position, target.position)
-				detector.detectedAsteroids++
+			if IsOnLine(sightLine, blocker.position) {
+				//fmt.Printf("%+v -> %+v blocked by %+v\n", detector.position, target.position, blocker.position)
+				isBlocked = true
+				break
 			}
 		}
+		if !isBlocked {
+			fmt.Printf("%+v -> %+v detected\n", asteroid.position, target.position)
+			detectedAsteroids = append(detectedAsteroids, target)
+		}
+	}
+	return detectedAsteroids
+}
+
+func GetBestPosition(asteroidList []*Detector) Detector {
+	for _, detector := range asteroidList {
+		asteroids := GetVisibleAsteroids(*detector, asteroidList)
+		detector.detectedAsteroids = len(asteroids)
 	}
 
 	maxDetects := 0
