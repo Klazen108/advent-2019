@@ -2,6 +2,8 @@ package main
 
 import (
 	"fmt"
+	"math"
+	"sort"
 	"strings"
 )
 
@@ -9,13 +11,75 @@ func Challenge10_1(mapStr string) Detector {
 	return GetBestPosition(GetAsteroids(mapStr))
 }
 
-func Challenge10_2(mapStr string) string {
-	return ""
+func Challenge10_2(mapStr string, target int) Detector {
+	asteroidList := GetAsteroids(mapStr)
+	detector := GetBestPosition(asteroidList)
+	//fmt.Printf("best detector: %+v\n", detector)
+	i := 0
+	for {
+		visibleAsteroids := GetVisibleAsteroids(detector, asteroidList)
+		fmt.Printf("Visible Asteroids: %d\n", len(visibleAsteroids))
+		//if the number of remaining asteroids won't reach target after they're all gone
+		//then wipe em out and go next loop
+		if i+len(visibleAsteroids) < target {
+			asteroidList = Remove(asteroidList, visibleAsteroids)
+			i += len(visibleAsteroids)
+			//fmt.Printf("skippin'")
+			continue
+		}
+		//otherwise this loop is the one
+		sightLines := GetSightLines(detector, visibleAsteroids)
+		//sort by angle
+		sort.Slice(sightLines, func(i, j int) bool { return sightLines[i].angle < sightLines[j].angle })
+		//for _, ass := range sightLines {
+		//fmt.Printf("\t%+v\n", ass)
+		//}
+		return sightLines[target-1-i].asteroid
+	}
+}
+
+func Remove(haystack []*Detector, needles []Detector) []*Detector {
+	for _, needle := range needles {
+		for i, hay := range haystack {
+			if hay.position == needle.position {
+				haystack = append(haystack[:i], haystack[i+1:]...)
+			}
+		}
+	}
+	return haystack
+}
+
+func GetSightLines(detector Detector, asteroids []Detector) []SightLine {
+	lines := make([]SightLine, 0)
+	for _, asteroid := range asteroids {
+		source := detector.position
+		target := asteroid.position
+
+		//invert source & target y, because y is down but should be up
+		angle := math.Atan2(float64(source.y)-float64(target.y), float64(target.x)-float64(source.x)) - (math.Pi / 2) //up is 0
+		if angle < 0 {
+			angle = 2*math.Pi + angle
+		} //clockwise
+		if angle != 0 {
+			angle = 2*math.Pi - angle
+		}
+
+		sl := SightLine{angle, asteroid}
+		lines = append(lines, sl)
+	}
+	return lines
+}
+
+type SightLine struct {
+	angle    float64
+	asteroid Detector
 }
 
 func GetAsteroids(mapStr string) []*Detector {
+	mapStr = strings.Trim(mapStr, " \r\n")
 	asteroidList := make([]*Detector, 0)
 	for y, line := range strings.Split(strings.ReplaceAll(mapStr, "\r", ""), "\n") {
+		line = strings.Trim(line, " \r\n")
 		for x, char := range line {
 			if string(char) == "#" {
 				asteroidList = append(asteroidList, &Detector{Point{x, y}, 0})
@@ -25,8 +89,8 @@ func GetAsteroids(mapStr string) []*Detector {
 	return asteroidList
 }
 
-func GetVisibleAsteroids(asteroid Detector, asteroidList []*Detector) []*Detector {
-	detectedAsteroids := make([]*Detector, 0)
+func GetVisibleAsteroids(asteroid Detector, asteroidList []*Detector) []Detector {
+	detectedAsteroids := make([]Detector, 0)
 	for _, target := range asteroidList {
 		if asteroid.position == target.position {
 			continue
@@ -45,8 +109,8 @@ func GetVisibleAsteroids(asteroid Detector, asteroidList []*Detector) []*Detecto
 			}
 		}
 		if !isBlocked {
-			fmt.Printf("%+v -> %+v detected\n", asteroid.position, target.position)
-			detectedAsteroids = append(detectedAsteroids, target)
+			//fmt.Printf("%+v -> %+v detected\n", asteroid.position, target.position)
+			detectedAsteroids = append(detectedAsteroids, *target)
 		}
 	}
 	return detectedAsteroids
