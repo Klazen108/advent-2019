@@ -129,6 +129,10 @@ func (comp *IntcodeComputer) GetOutput() Byte {
 	return val
 }
 
+func (comp *IntcodeComputer) HasOutput() bool {
+	return len(comp.outputBuffer) != 0
+}
+
 func (comp *IntcodeComputer) InspectOutput() []Byte {
 	return comp.outputBuffer
 }
