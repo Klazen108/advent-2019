@@ -8,6 +8,12 @@ func TestDay12_1(t *testing.T) {
 		t.Errorf("Expected 10845.0000, got %s", output)
 	}
 }
+func TestDay12_2(t *testing.T) {
+	output := Challenge12_2()
+	if output != "100" {
+		t.Errorf("Expected 100, got %s", output)
+	}
+}
 
 func TestAttractPPos(t *testing.T) {
 	adj1, adj2 := AttractP(3, 5)

@@ -1,6 +1,9 @@
 package main
 
-import "fmt"
+import (
+	"fmt"
+	"strconv"
+)
 
 func Challenge12_1() string {
 	io := MoonAt("io", 5, 4, 4)
@@ -18,6 +21,34 @@ func Challenge12_1() string {
 		totEnergy += moon.TotalEnergy()
 	}
 	return fmt.Sprintf("%.4f", totEnergy)
+}
+
+func Challenge12_2() string {
+	io := MoonAt("io", 5, 4, 4)
+	europa := MoonAt("europa", -11, -11, -3)
+	ganymede := MoonAt("ganymede", 0, 7, 0)
+	callisto := MoonAt("callisto", -13, 2, 10)
+
+	moons := []Body{io, europa, ganymede, callisto}
+	initialMoons := make([]Body, 4)
+	copy(initialMoons, moons)
+
+	for i := 0; i < 100000000; i++ {
+		moons = Tick(moons)
+		allMatch := true
+		for ii := range initialMoons {
+			//fmt.Printf("%+v", initialMoons[ii])
+			if initialMoons[ii] != moons[ii] {
+				//fmt.Printf("break")
+				allMatch = false
+				break
+			}
+		}
+		if allMatch {
+			return strconv.Itoa(i)
+		}
+	}
+	return "-1"
 }
 
 func MoonAt(name string, x, y, z float64) Body {
@@ -38,19 +69,14 @@ type Vector3 struct {
 
 func Tick(world []Body) []Body {
 	//Apply gravity
-	for ai, _ := range world {
-		for bi, _ := range world {
-			if ai >= bi { //skip already processed pairs & self pairing
-				continue
-			}
-			//fmt.Printf("%d,%d -> BEFORE a: %v b: %v\n", ai, bi, world[ai], world[bi])
+	for bi := range world {
+		for ai := 0; ai < bi; ai++ {
 			world[ai], world[bi] = Attract(world[ai], world[bi])
-			//fmt.Printf("%d,%d -> AFTER  a: %v b: %v\n", ai, bi, world[ai], world[bi])
 		}
 	}
 
 	//Apply velocity
-	for ai, _ := range world {
+	for ai := range world {
 		world[ai] = Advance(world[ai])
 	}
 	return world
